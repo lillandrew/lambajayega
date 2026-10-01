@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live JustGo Chat</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 100%; max-width: 450px; height: 85vh; background: white; border: 1px solid #dbdbdb; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #fff; border-bottom: 1px solid #dbdbdb; padding: 15px; text-align: center; font-weight: 600; font-size: 1.1rem; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .message { padding: 10px 16px; border-radius: 20px; max-width: 75%; font-size: 0.95rem; word-break: break-word; }
+        .message.received { background: #efefef; color: black; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message.sent { background: #0095f6; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #dbdbdb; align-items: center; }
+        .chat-input-area input { flex: 1; padding: 10px 16px; border: 1px solid #dbdbdb; border-radius: 22px; outline: none; font-size: 0.95rem; }
+        .chat-input-area button { background: none; color: #0095f6; border: none; padding: 0 15px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+        .chat-input-area button:hover { color: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">Direct Live Chat</div>
+    <div class="chat-messages" id="chatBox"></div>
+    <div class="chat-input-area">
+        <input type="text" id="messageInput" placeholder="Message...">
+        <button id="sendBtn">Send</button>
+    </div>
+</div>
+
+<!-- Firebase Core and Firestore SDKs -->
+<script type="module">
+  import { initializeApp } from "https://gstatic.com";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://gstatic.com";
+
+  // 1. Firebase Configuration (Temporary Public Demo Keys)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAsD-DemoKeyForTestingOnly123456",
+    authDomain: "://firebaseapp.com",
+    projectId: "justgo-chat-demo",
+    storageBucket: "://appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abcdefg123456"
+  };
+
+  // Generate a simple unique ID for this device session so it knows which messages are yours
+  const myUserId = localStorage.getItem('chat_user_id') || 'user_' + Math.random().toString(36).substr(2, 9);
+  localStorage.setItem('chat_user_id', myUserId);
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const messagesRef = collection(db, "messages");
+
+  const chatBox = document.getElementById('chatBox');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // 2. Listen to Database for Real-Time Messages
+  const q = query(messagesRef, orderBy("createdAt", "asc"));
+  onSnapshot(q, (snapshot) => {
+      chatBox.innerHTML = ''; // Clear chat area
+      snapshot.forEach((doc) => {
+          const data = doc.data();
+          const messageDiv = document.createElement('div');
+          
+          // If the message user ID matches this device, show as 'sent', otherwise 'received'
+          if (data.userId === myUserId) {
+              messageDiv.classList.add('message', 'sent');
+          } else {
+              messageDiv.classList.add('message', 'received');
+          }
+          
+          messageDiv.textContent = data.text;
+          chatBox.appendChild(messageDiv);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight; // Scroll down
+  });
+
+  // 3. Send Message to Database
+  async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (text === "") return;
+
+      messageInput.value = ""; // Clear input immediately for smooth feel
+
+      try {
+          await addDoc(messagesRef, {
+              text: text,
+              userId: myUserId,
+              createdAt: serverTimestamp()
+          });
+      } catch (error) {
+          console.error("Error sending message: ", error);
+      }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+  });
+</script>
+
+</body>
+</html>
