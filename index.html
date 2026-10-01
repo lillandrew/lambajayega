@@ -1,105 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live JustGo Chat</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .chat-container { width: 100%; max-width: 450px; height: 85vh; background: white; border: 1px solid #dbdbdb; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-header { background: #fff; border-bottom: 1px solid #dbdbdb; padding: 15px; text-align: center; font-weight: 600; font-size: 1.1rem; }
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .message { padding: 10px 16px; border-radius: 20px; max-width: 75%; font-size: 0.95rem; word-break: break-word; }
-        .message.received { background: #efefef; color: black; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .message.sent { background: #e6c300; color: black; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
-        .chat-input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #dbdbdb; align-items: center; }
-        .chat-input-area input { flex: 1; padding: 10px 16px; border: 1px solid #dbdbdb; border-radius: 22px; outline: none; font-size: 0.95rem; }
-        .chat-input-area button { background: none; color: #e6c300; border: none; padding: 0 15px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-        .chat-input-area button:hover { color: #bfa200; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TheoGO Live Chat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#0f172a;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:10px;color:#e2e8f0}
+#loginScreen{width:100%;max-width:420px;background:#1e293b;border-radius:16px;padding:32px 24px;border:1px solid #334155}
+#loginScreen h1{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;color:#fff}
+#loginScreen .sub{text-align:center;font-size:12px;color:#94a3b8;margin-bottom:24px}
+.brand{width:64px;height:64px;margin:0 auto 16px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:30px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px}
+.field input{width:100%;height:46px;padding:0 14px;border-radius:10px;border:1.5px solid #334155;background:#0f172a;color:#fff;font-size:15px;outline:none}
+.field input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.btn{width:100%;height:48px;border:0;border-radius:10px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;display:none}
+.msg.error{background:rgba(239,68,68,.15);color:#fca5a5;display:block;border-left:3px solid #ef4444}
+.msg.success{background:rgba(34,197,94,.15);color:#86efac;display:block;border-left:3px solid #22c55e}
+.hint{margin-top:16px;padding:12px;border-radius:10px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);font-size:12px;color:#93c5fd;line-height:1.5}
+
+#chatScreen{display:none;width:100%;max-width:500px;height:92vh;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;flex-direction:column}
+.chat-header{background:#0f172a;padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #334155}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0}
+.info{flex:1;min-width:0}
+.info strong{display:block;font-size:14px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info span{display:block;font-size:11px;color:#64748b;margin-top:2px}
+.logout-btn{padding:8px 14px;border-radius:8px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer}
+.logout-btn:hover{background:#334155;color:#fff}
+.messages{flex:1;padding:16px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.message{padding:10px 14px;border-radius:16px;max-width:80%;font-size:14px;line-height:1.45;word-break:break-word;animation:msgIn .2s ease-out}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.message.received{background:#334155;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px}
+.message.sent{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.message .sender{font-size:10px;font-weight:700;opacity:.75;margin-bottom:3px}
+.message.received .sender{color:#93c5fd}
+.message .time{font-size:9.5px;opacity:.6;margin-top:4px;text-align:right}
+.empty-state{text-align:center;padding:40px 20px;color:#64748b;font-size:13px;margin:auto}
+.input-area{display:flex;padding:12px;background:#0f172a;border-top:1px solid #334155;gap:8px;align-items:center}
+.input-area input{flex:1;height:44px;padding:0 16px;border-radius:22px;border:1.5px solid #334155;background:#1e293b;color:#fff;font-size:14px;outline:none}
+.input-area input:focus{border-color:#3b82f6}
+.send-btn{width:44px;height:44px;min-width:44px;border:0;border-radius:50%;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.send-btn:disabled{opacity:.5;cursor:not-allowed}
+.send-btn svg{width:18px;height:18px}
+.banner{padding:8px 14px;background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.3);font-size:11px;color:#fbbf24;text-align:center;font-weight:600}
+</style>
 </head>
 <body>
 
-<div class="chat-container">
-    <div class="chat-header">Direct Live Chat</div>
-    <div class="chat-messages" id="chatBox"></div>
-    <div class="chat-input-area">
-        <input type="text" id="messageInput" placeholder="Message...">
-        <button id="sendBtn">Send</button>
+<div id="loginScreen">
+  <div class="brand">💬</div>
+  <h1>TheoGO Live Chat</h1>
+  <p class="sub">Sign in with your Theogo credentials</p>
+  <form id="loginForm">
+    <div class="field">
+      <label for="username">Theogo Username</label>
+      <input type="text" id="username" placeholder="your_username" required>
     </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn" id="loginBtn">Sign in to chat</button>
+  </form>
+  <div id="loginMsg" class="msg"></div>
+  <div class="hint"><strong>ℹ️ Note:</strong> Text-only live chat. Messages are not stored — they disappear when you close the page.</div>
+</div>
+
+<div id="chatScreen">
+  <div class="chat-header">
+    <div class="avatar" id="myAvatar">?</div>
+    <div class="info">
+      <strong>TheoGO Community</strong>
+      <span id="statusText">Connecting…</span>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </div>
+  <div class="banner">📝 Text-only chat — messages are ephemeral (not stored)</div>
+  <div class="messages" id="chatBox">
+    <div class="empty-state"><div>💬</div><div>No messages yet. Say hello!</div></div>
+  </div>
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+    <button class="send-btn" id="sendBtn" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    </button>
+  </div>
 </div>
 
 <script type="module">
-  // 1. These engine links are required so the web browser understands Firebase commands:
-  import { initializeApp } from "https://gstatic.com";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://gstatic.com";
+/* ============================================================
+   SUPABASE IMPORTS
+   ============================================================ */
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-  // 2. Your cleaned up database link keys block:
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "lambajayega-chat.firebaseapp.com",
-    projectId: "lambajayega-chat",
-    storageBucket: "lambajayega-chat.firebasestorage.app",
-    messagingSenderId: "661007249047",
-    appId: "YOUR_APP_ID"
-  };
+/* ============================================================
+   ⚠️ REPLACE WITH YOUR SUPABASE CREDENTIALS
+   ============================================================ */
+const SUPABASE_URL = 'https://hvuhdnljbkdwzxlquvfp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_csgdlWOp6QexF8SmH7oSfQ_XRnaIzuY';
 
-  // Generate unique device user ID session
-  const myUserId = localStorage.getItem('chat_user_id') || 'user_' + Math.random().toString(36).substr(2, 9);
-  localStorage.setItem('chat_user_id', myUserId);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Initialize Firebase Engine
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const messagesRef = collection(db, "messages");
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+const loginScreen = document.getElementById('loginScreen');
+const chatScreen  = document.getElementById('chatScreen');
+const loginForm   = document.getElementById('loginForm');
+const loginBtn    = document.getElementById('loginBtn');
+const loginMsg    = document.getElementById('loginMsg');
+const usernameEl  = document.getElementById('username');
+const passwordEl  = document.getElementById('password');
+const chatBox     = document.getElementById('chatBox');
+const messageInput= document.getElementById('messageInput');
+const sendBtn     = document.getElementById('sendBtn');
+const logoutBtn   = document.getElementById('logoutBtn');
+const myAvatar    = document.getElementById('myAvatar');
+const statusText  = document.getElementById('statusText');
 
-  const chatBox = document.getElementById('chatBox');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
+let channel = null;
+let currentUsername = null;
+let currentUserId = null;
 
-  // Real-Time Database sync listener
-  const q = query(messagesRef, orderBy("createdAt", "asc"));
-  onSnapshot(q, (snapshot) => {
-      chatBox.innerHTML = ''; 
-      snapshot.forEach((doc) => {
-          const data = doc.data();
-          const messageDiv = document.createElement('div');
-          
-          if (data.userId === myUserId) {
-              messageDiv.classList.add('message', 'sent');
-          } else {
-              messageDiv.classList.add('message', 'received');
-          }
-          
-          messageDiv.textContent = data.text;
-          chatBox.appendChild(messageDiv);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-  });
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function showMsg(text, type = 'error') {
+  loginMsg.textContent = text;
+  loginMsg.className = 'msg ' + type;
+}
+function clearMsg() { loginMsg.textContent = ''; loginMsg.className = 'msg'; }
 
-  // Send message packet data to cloud database
-  async function sendMessage() {
-      const text = messageInput.value.trim();
-      if (text === "") return;
-      messageInput.value = "";
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-      try {
-          await addDoc(messagesRef, {
-              text: text,
-              userId: myUserId,
-              createdAt: serverTimestamp()
-          });
-      } catch (error) {
-          console.error("Error sending message: ", error);
-      }
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function scrollToBottom() {
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* ============================================================
+   LOGIN — Supabase anonymous auth + store username locally
+   ============================================================ */
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearMsg();
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing in…';
+
+  const username = usernameEl.value.trim();
+  const password = passwordEl.value;
+
+  if (!username || username.length < 3) {
+    showMsg('Username must be at least 3 characters.');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign in to chat';
+    return;
+  }
+  if (!password || password.length < 4) {
+    showMsg('Password must be at least 4 characters.');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign in to chat';
+    return;
   }
 
-  sendBtn.addEventListener('click', sendMessage);
-  messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-  });
-</script>
+  try {
+    // Supabase anonymous sign-in — creates a real authenticated session
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) throw error;
 
+    currentUserId = data.user.id;
+    currentUsername = username.toLowerCase();
+
+    // Store username locally (display identity)
+    localStorage.setItem('theogo_username', currentUsername);
+    localStorage.setItem('theogo_uid', currentUserId);
+
+    showMsg('Signed in. Connecting…', 'success');
+
+    myAvatar.textContent = currentUsername.charAt(0).toUpperCase();
+    loginScreen.style.display = 'none';
+    chatScreen.style.display = 'flex';
+
+    connectChat();
+  } catch (err) {
+    console.error(err);
+    showMsg(err.message || 'Sign-in failed. Please try again.');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign in to chat';
+  }
+});
+
+/* ============================================================
+   CHAT — Supabase Realtime Broadcast
+   ============================================================ */
+function connectChat() {
+  if (channel) supabase.removeChannel(channel);
+
+  // Subscribe to the community broadcast channel
+  channel = supabase.channel('theogo-community', {
+    config: { broadcast: { self: true } }  // receive own messages too
+  });
+
+  channel
+    .on('broadcast', { event: 'message' }, (payload) => {
+      const { text, username, uid, timestamp } = payload.payload;
+      const isMine = uid === currentUserId;
+      appendMessage(text, username, isMine, timestamp);
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        statusText.textContent = 'Connected — text only';
+        messageInput.focus();
+      } else if (status === 'CHANNEL_ERROR') {
+        statusText.textContent = 'Connection error';
+      }
+    });
+}
+
+function appendMessage(text, username, isMine, timestamp) {
+  // Remove empty state if present
+  const empty = chatBox.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'message ' + (isMine ? 'sent' : 'received');
+
+  let html = '';
+  if (!isMine) {
+    html += '<div class="sender">' + escapeHtml(username) + '</div>';
+  }
+  html += '<div>' + escapeHtml(text) + '</div>';
+  html += '<div class="time">' + formatTime(timestamp || Date.now()) + '</div>';
+
+  div.innerHTML = html;
+  chatBox.appendChild(div);
+  scrollToBottom();
+}
+
+/* ============================================================
+   SEND MESSAGE — text only
+   ============================================================ */
+async function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text || !channel) return;
+
+  messageInput.value = '';
+  sendBtn.disabled = true;
+
+  await channel.send({
+    type: 'broadcast',
+    event: 'message',
+    payload: {
+      text: text.slice(0, 2000),
+      username: currentUsername,
+      uid: currentUserId,
+      timestamp: Date.now()
+    }
+  });
+
+  messageInput.focus();
+}
+
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+messageInput.addEventListener('input', () => {
+  sendBtn.disabled = messageInput.value.trim() === '';
+});
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+logoutBtn.addEventListener('click', async () => {
+  if (!confirm('Sign out?')) return;
+  if (channel) { supabase.removeChannel(channel); channel = null; }
+  await supabase.auth.signOut();
+  localStorage.removeItem('theogo_username');
+  localStorage.removeItem('theogo_uid');
+  currentUsername = null;
+  currentUserId = null;
+  chatBox.innerHTML = '<div class="empty-state"><div>💬</div><div>No messages yet. Say hello!</div></div>';
+  chatScreen.style.display = 'none';
+  loginScreen.style.display = 'block';
+  usernameEl.value = '';
+  passwordEl.value = '';
+  clearMsg();
+  loginBtn.disabled = false;
+  loginBtn.textContent = 'Sign in to chat';
+});
+
+/* ============================================================
+   AUTO-LOGIN if already signed in
+   ============================================================ */
+(async () => {
+  const savedUsername = localStorage.getItem('theogo_username');
+  const savedUid = localStorage.getItem('theogo_uid');
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (session && savedUsername && savedUid) {
+    currentUsername = savedUsername;
+    currentUserId = savedUid;
+    myAvatar.textContent = currentUsername.charAt(0).toUpperCase();
+    loginScreen.style.display = 'none';
+    chatScreen.style.display = 'flex';
+    connectChat();
+  }
+})();
+</script>
 </body>
 </html>
